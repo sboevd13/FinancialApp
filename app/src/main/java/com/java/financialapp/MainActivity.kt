@@ -1,10 +1,13 @@
 package com.java.financialapp
 
 import android.content.Intent
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -73,50 +76,98 @@ fun OfferCard(offer: Offer, onGetOfferClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)) // ИЗ FIGMA
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            // --- Верхняя секция: Название и Логотип ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                Text(
-                    text = offer.name,
-                    modifier = Modifier.weight(1f).padding(top = 4.dp),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color(0xFF1C1C1E) // ИЗ FIGMA
-                )
-                AsyncImage(
-                    model = offer.logoUrl,
-                    contentDescription = "Логотип ${offer.name}",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Fit
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            val (
+                nameRef, logoRef,
+                ageRef, termRef,
+                rateRef, amountRef,
+                buttonRef
+            ) = createRefs()
 
-            // --- Секция с параметрами (2x2 сетка) ---
-            Row(modifier = Modifier.fillMaxWidth()) {
-                InfoItem(label = "Возраст:", value = offer.age, modifier = Modifier.weight(1f))
-                InfoItem(label = "Срок выдачи:", value = offer.term, modifier = Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
-                InfoItem(label = "Ставка:", value = offer.rate, modifier = Modifier.weight(1f))
-                InfoItem(label = "Сумма:", value = offer.amount, modifier = Modifier.weight(1f))
-            }
-            Spacer(modifier = Modifier.height(28.dp))
+            // 1. Логотип
+            AsyncImage(
+                model = offer.logoUrl,
+                contentDescription = "Логотип ${offer.name}",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .constrainAs(logoRef) {
+                        top.linkTo(parent.top)
+                        end.linkTo(parent.end)
+                    },
+                contentScale = ContentScale.Fit
+            )
 
-            // --- Кнопка ---
+            // 2. Название компании
+            Text(
+                text = offer.name,
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color(0xFF1C1C1E),
+                modifier = Modifier.constrainAs(nameRef) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(logoRef.start, margin = 12.dp)
+                    width = Dimension.fillToConstraints
+                }
+            )
+
+            // 3. Барьер, чтобы правая колонка не заезжала под логотип
+            val startBarrier = createStartBarrier(logoRef, margin = 12.dp)
+
+            // 4. Левая колонка параметров
+            InfoItem(
+                label = "Возраст:", value = offer.age,
+                modifier = Modifier.constrainAs(ageRef) {
+                    top.linkTo(nameRef.bottom, margin = 12.dp)
+                    start.linkTo(parent.start)
+                }
+            )
+            InfoItem(
+                label = "Ставка:", value = offer.rate, modifier = Modifier.constrainAs(rateRef) {
+                    top.linkTo(ageRef.bottom, margin = 12.dp)
+                    linkTo(parent.start, amountRef.start, endMargin = 5.dp, bias = 0f)
+                    width = Dimension.preferredWrapContent
+                }
+            )
+
+
+            // 5. Правая колонка параметров
+            InfoItem(
+                label = "Срок выдачи:", value = offer.term,
+                modifier = Modifier.constrainAs(termRef) {
+                    top.linkTo(ageRef.top) // Выравниваем по верху с "Возрастом"
+                    start.linkTo(ageRef.end) // Начинается правее "Возраста"
+                    end.linkTo(startBarrier)
+                    width = Dimension.preferredWrapContent
+                }
+            )
+            InfoItem(
+                label = "Сумма:", value = offer.amount,
+                modifier = Modifier.constrainAs(amountRef) {
+                    top.linkTo(rateRef.top) // Выравниваем по верху со "Ставкой"
+                    // --- ВОТ ОНО, КЛЮЧЕВОЕ РЕШЕНИЕ ---
+                    start.linkTo(termRef.start) // НАЧАТЬ ТАМ ЖЕ, ГДЕ НАЧИНАЕТСЯ "Срок выдачи"
+                    width = Dimension.preferredWrapContent
+                }
+            )
+
+            // 6. Кнопка
             Button(
                 onClick = onGetOfferClick,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
+                    .fillMaxWidth(0.8f)
+                    .height(52.dp)
+                    .constrainAs(buttonRef) {
+                        top.linkTo(rateRef.bottom, margin = 28.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    },
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1E8449),
