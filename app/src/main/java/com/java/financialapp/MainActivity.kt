@@ -53,19 +53,30 @@ fun OffersScreen(viewModel: OffersViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    LazyColumn(
+    // Оборачиваем все в Box, чтобы показывать индикатор загрузки поверх списка
+    Box(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentAlignment = Alignment.Center
     ) {
-        items(uiState.offers) { offer ->
-            OfferCard(
-                offer = offer,
-                onGetOfferClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(offer.partnerLink))
-                    context.startActivity(intent)
-                }
-            )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(uiState.offers) { offer ->
+                OfferCard(
+                    offer = offer,
+                    onGetOfferClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(offer.partnerLink))
+                        context.startActivity(intent)
+                    }
+                )
+            }
+        }
+
+        // Если идет загрузка, показываем индикатор
+        if (uiState.isLoading) {
+            CircularProgressIndicator()
         }
     }
 }

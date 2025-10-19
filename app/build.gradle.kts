@@ -60,4 +60,9 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    // Retrofit для удобных сетевых запросов
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+// Moshi для превращения JSON в объекты Kotlin (современнее, чем Gson)
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
 }
